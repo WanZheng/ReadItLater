@@ -1,0 +1,11 @@
+/.idea/misc.xml
+/.idea/workspace.xml
+/.idea/.name
+
+/local.properties
+/bin/
+/gen/
+/out/
+/obj/
+
+*.swp

@@ -32,4 +32,9 @@ public class ItemInfo implements BaseColumns {
 
         return item;
     }
+
+    @Override
+    public String toString() {
+        return "ItemInfo[url=" + url + "]";
+    }
 }

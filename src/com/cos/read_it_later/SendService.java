@@ -58,6 +58,7 @@ public class SendService extends Service {
                     break;
                 }
 
+                Log.d(SendActivity.TAG, "got " + items.size() + " pending items");
                 if (! sendItems(items)) {
                     return "failed";
                 }
@@ -88,6 +89,8 @@ public class SendService extends Service {
     }
 
     private boolean sendItem(ItemInfo item) {
+        Log.d(SendActivity.TAG, "sending " + item);
+
         for (int i=postParams.size()-1; i>=2; i--) {
             postParams.remove(i);
         }

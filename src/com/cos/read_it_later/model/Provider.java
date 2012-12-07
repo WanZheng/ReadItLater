@@ -52,7 +52,7 @@ public class Provider extends ContentProvider {
         SqlArguments args = new SqlArguments(uri);
 
         SQLiteDatabase db = openHelper.getWritableDatabase();
-        final long rowId = dbInsertAndCheck(openHelper, db, args.table, null, values);
+        final long rowId = db.insert(args.table, null, values);
         if (rowId <= 0) {
             return null;
         }
@@ -98,13 +98,6 @@ public class Provider extends ContentProvider {
                 AUTHORITY + "/" + TABLE_NAME
                 + (id >= 0 ? ("/" + id) : "")
                 + "?" + PARAMETER_NOTIFY + "=" + notify);
-    }
-
-    private static long dbInsertAndCheck(DBOpenHelper openHelper, SQLiteDatabase db, String table, String nullColumnHack, ContentValues values) {
-        if (! values.containsKey(SyncStateContract.Columns._ID)) {
-            throw new RuntimeException("Error: attempting to add item without specifying an id");
-        }
-        return db.insert(table, nullColumnHack, values);
     }
 
     private void sendNotify(Uri uri) {

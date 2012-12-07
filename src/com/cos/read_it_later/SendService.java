@@ -58,7 +58,9 @@ public class SendService extends Service {
                     break;
                 }
 
-                sendItems(items);
+                if (! sendItems(items)) {
+                    return "failed";
+                }
             }
             return "done";
         }
@@ -70,16 +72,22 @@ public class SendService extends Service {
         }
     }
 
-    private void sendItems(List<ItemInfo> items) {
+    private boolean sendItems(List<ItemInfo> items) {
+        boolean success = true;
         http = AndroidHttpClient.newInstance("ReadItLater");
         post = new HttpPost("https://www.instapaper.com/api/add");
 
         for (ItemInfo item : items) {
-            sendItem(item);
+            if (! sendItem(item)) {
+                success = false;
+            }
         }
+
+        http.close();
+        return success;
     }
 
-    private void sendItem(ItemInfo item) {
+    private boolean sendItem(ItemInfo item) {
         for (int i=postParams.size()-1; i>=2; i--) {
             postParams.remove(i);
         }
@@ -96,8 +104,10 @@ public class SendService extends Service {
 
             if (statusLine.getStatusCode() == 201) {
                 // TODO: remove item from db
+                return true;
             }else{
                 // TODO: notify user
+                return false;
             }
         } catch (Exception e) {
             // TODO:

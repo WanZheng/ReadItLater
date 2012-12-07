@@ -1,29 +1,24 @@
 package com.cos.read_it_later;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.cos.read_it_later.model.ItemInfo;
+import com.cos.read_it_later.model.Provider;
 
 public class SendActivity extends Activity implements View.OnClickListener {
     public static final String TAG = "ReadItLater";
-    private boolean committed = false;
-    private SendService.LocalBinder service;
-    private EditText title;
-    private EditText url;
-    private EditText comment;
+    private EditText titleEditor;
+    private EditText urlEditor;
+    private EditText commentEditor;
     private Button button;
-
-    private static final int MSG_SEND = 0x01;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,11 +28,9 @@ public class SendActivity extends Activity implements View.OnClickListener {
         button = (Button) findViewById(R.id.send);
         button.setOnClickListener(this);
 
-        title = (EditText) findViewById(R.id.title);
-        url = (EditText) findViewById(R.id.url);
-        comment = (EditText) findViewById(R.id.comment);
-
-        bindService(new Intent(this, SendService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        titleEditor = (EditText) findViewById(R.id.title);
+        urlEditor = (EditText) findViewById(R.id.url);
+        commentEditor = (EditText) findViewById(R.id.comment);
 
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -53,8 +46,6 @@ public class SendActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        unbindService(serviceConnection);
     }
 
     private void handleSendText(Intent intent) {
@@ -62,49 +53,44 @@ public class SendActivity extends Activity implements View.OnClickListener {
         String title = intent.getStringExtra(Intent.EXTRA_SUBJECT);
         // TODO: extra: share_screenshot: android.graphics.Bitmap@415b0bf8
 
-        this.title.setText(title);
-        this.url.setText(url);
+        titleEditor.setText(title);
+        urlEditor.setText(url);
     }
 
     @Override
     public void onClick(View view) {
-        title.setEnabled(false);
-        url.setEnabled(false);
-        comment.setEnabled(false);
+        AsyncTask<Object, Object, Object> task = new AsyncTask<Object, Object, Object>() {
+            private ItemInfo info = new ItemInfo();
 
-        button.setEnabled(false);
-        button.setText(R.string.sending);
+            @Override
+            protected void onPreExecute() {
+                titleEditor.setEnabled(false);
+                urlEditor.setEnabled(false);
+                commentEditor.setEnabled(false);
 
-        committed = true;
+                button.setEnabled(false);
+                button.setText(R.string.sending);
 
-        handler.sendEmptyMessage(MSG_SEND);
-    }
-
-    private final ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            service = (SendService.LocalBinder) iBinder;
-            handler.sendEmptyMessage(MSG_SEND);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            service = null;
-        }
-    };
-
-    private final Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_SEND:
-                    if (service == null || !committed) {
-                        return;
-                    }
-                    service.send(((TextView)title).getText(), ((TextView)url).getText(), ((TextView)comment).getText());
-                    finish();
-                    break;
+                info.url = ((TextView) urlEditor).getText().toString();
+                info.title = ((TextView) titleEditor).getText().toString();
+                info.comment = ((TextView) commentEditor).getText().toString();
             }
-        }
-    };
+
+            @Override
+            protected Object doInBackground(Object... objects) {
+                ContentResolver resolver = getContentResolver();
+                ContentValues values = new ContentValues();
+                info.onAddToDatabase(values);
+                resolver.insert(Provider.getUri(false), values);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                startService(new Intent(SendActivity.this, SendService.class));
+                finish();
+            }
+        };
+        task.execute();
+    }
 }

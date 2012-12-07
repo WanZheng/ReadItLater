@@ -36,5 +36,8 @@
         </activity>
 
         <service android:name=".SendService" android:exported="false"/>
+
+        <provider android:name=".model.Provider"
+                  android:authorities="com.cos.read_it_later"/>
     </application>
 </manifest>

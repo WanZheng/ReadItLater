@@ -3,10 +3,12 @@ package com.cos.read_it_later;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 import com.cos.read_it_later.model.ItemInfo;
@@ -46,8 +48,12 @@ public class SendService extends Service {
     private class Task extends AsyncTask<Object, Object, String> {
         @Override
         protected void onPreExecute() {
-            postParams.add(new BasicNameValuePair("username", "xxx"));
-            postParams.add(new BasicNameValuePair("password", "xxx"));
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SendService.this);
+            String username = preferences.getString("username", "xxx");
+            String password = preferences.getString("password", "xxx");
+
+            postParams.add(new BasicNameValuePair("username", username));
+            postParams.add(new BasicNameValuePair("password", password));
         }
 
         @Override

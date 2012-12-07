@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.provider.SyncStateContract;
 import android.text.TextUtils;
 
 public class Provider extends ContentProvider {

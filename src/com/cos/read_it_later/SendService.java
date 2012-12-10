@@ -30,6 +30,7 @@ public class SendService extends Service {
     private ArrayList<BasicNameValuePair> postParams = new ArrayList<BasicNameValuePair>(5);
     private AndroidHttpClient http;
     private HttpPost post;
+    private ContentResolver resolver;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -58,6 +59,9 @@ public class SendService extends Service {
 
         @Override
         protected String doInBackground(Object... objects) {
+            if (resolver == null) {
+                resolver = getContentResolver();
+            }
             while (true) {
                 List<ItemInfo> items = fetchPendingItems();
                 if (items == null) {
@@ -68,6 +72,7 @@ public class SendService extends Service {
                 if (! sendItems(items)) {
                     return "failed";
                 }
+                break; // XXX: for debuging
             }
             return "done";
         }
@@ -87,6 +92,12 @@ public class SendService extends Service {
         for (ItemInfo item : items) {
             if (! sendItem(item)) {
                 success = false;
+                break;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // null
             }
         }
 
@@ -112,7 +123,8 @@ public class SendService extends Service {
             Log.d(SendActivity.TAG, statusLine.toString());
 
             if (statusLine.getStatusCode() == 201) {
-                // TODO: remove item from db
+                resolver.delete(Provider.getUri(item.id, false), null, null);
+                Log.d(SendActivity.TAG, "succeed: " + item);
                 return true;
             }else{
                 // TODO: notify user
@@ -125,7 +137,6 @@ public class SendService extends Service {
     }
 
     private List<ItemInfo> fetchPendingItems() {
-        ContentResolver resolver = getContentResolver();
         Cursor c = resolver.query(Provider.getUri(false), null, null, null, null);
         try {
             int count = c.getCount();

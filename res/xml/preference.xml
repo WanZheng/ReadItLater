@@ -5,4 +5,10 @@
                         android:summary="UserName"/>
     <EditTextPreference android:key="password"
                         android:summary="Password"/>
+    <Preference android:title="PendingItems">
+        <intent android:targetClass="com.cos.read_it_later.PendingItemsActivity"
+                android:targetPackage="com.cos.read_it_later"/>
+    </Preference>
+    <Preference android:key="send_now"
+                android:title="Send now!"/>
 </PreferenceScreen>

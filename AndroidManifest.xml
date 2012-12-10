@@ -39,6 +39,9 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".PendingItemsActivity"
+                  android:label="PendingItems"/>
+
         <service android:name=".SendService" android:exported="false"/>
 
         <provider android:name=".model.Provider"

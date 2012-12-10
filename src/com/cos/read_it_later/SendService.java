@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -20,6 +21,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,10 +29,11 @@ import java.util.List;
 
 public class SendService extends Service {
     private Task task;
-    private ArrayList<BasicNameValuePair> postParams = new ArrayList<BasicNameValuePair>(5);
+    private final ArrayList<BasicNameValuePair> postParams = new ArrayList<BasicNameValuePair>(5);
     private AndroidHttpClient http;
     private HttpPost post;
     private ContentResolver resolver;
+    private final Handler handler = new Handler();
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -105,7 +108,7 @@ public class SendService extends Service {
         return success;
     }
 
-    private boolean sendItem(ItemInfo item) {
+    private boolean sendItem(final ItemInfo item) {
         Log.d(SendActivity.TAG, "sending " + item);
 
         for (int i=postParams.size()-1; i>=2; i--) {
@@ -117,21 +120,36 @@ public class SendService extends Service {
             postParams.add(new BasicNameValuePair("comment", item.comment));
         }
         try {
-            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(postParams);
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(postParams, HTTP.UTF_8);
             post.setEntity(entity);
             StatusLine statusLine = http.execute(post, responseHandler);
             Log.d(SendActivity.TAG, statusLine.toString());
 
             if (statusLine.getStatusCode() == 201) {
                 resolver.delete(Provider.getUri(item.id, false), null, null);
-                Log.d(SendActivity.TAG, "succeed: " + item);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(SendService.this, "succeed: " + item, Toast.LENGTH_LONG).show();
+                    }
+                });
                 return true;
             }else{
-                // TODO: notify user
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(SendService.this, "failed: " + item, Toast.LENGTH_LONG).show();
+                    }
+                });
                 return false;
             }
-        } catch (Exception e) {
-            // TODO:
+        } catch (final Exception e) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(SendService.this, "failed: " + item + "\nexception: " + e, Toast.LENGTH_LONG).show();
+                }
+            });
             throw new RuntimeException(e);
         }
     }

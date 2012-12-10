@@ -4,6 +4,12 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
         >
+    <Button
+            android:id="@+id/send"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Read It Later"/>
+
     <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -47,11 +53,5 @@
             android:id="@+id/comment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="this is the comments"/>
-
-    <Button
-            android:id="@+id/send"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Read It Later"/>
+            />
 </LinearLayout>
